@@ -1,0 +1,8 @@
+# local
+.env
+
+# sample data 
+*.json
+
+# binary
+weatheragg

@@ -6,9 +6,16 @@ Provides a REST API for weather data requests.
 
 ## Usage
 
+### Standalone Go binary
 1. Build locally, `make build-bin`
 1. Run locally, `./weatheragg`
-1. Make a request for a point geometry in the United States. E.g. Central Park in Manhattan, NYk
+
+### Docker 
+1. Build locally, `make build`
+1. Run locally, `make up`
+
+
+Then make a request for a point geometry in the United States. E.g. Central Park in Manhattan, NYk
 ```
   curl -X GET "http://localhost:8080/weather/point?longitude=-73.973192&latitude=40.772596"
 ```

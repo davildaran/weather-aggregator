@@ -1,20 +1,32 @@
 package schemas
 
-type NWSApiPointResponse struct {
-	Context    []interface{} `json:"@context"`
-	ID         string        `json:"id"`
-	Type       string        `json:"type"`
-	Geometry   Geometry      `json:"geometry"`
-	Properties Properties    `json:"properties"`
+import "fmt"
+
+func (n NWSApiPointsResponse) Validate() error {
+	if n.Properties.GridID == "" {
+		return fmt.Errorf("unexpected empty string for gridId")
+	}
+
+	if n.Properties.GridX <= 0 {
+		return fmt.Errorf("unexpected value for gridX")
+	}
+
+	if n.Properties.GridY <= 0 {
+		return fmt.Errorf("unexpected value for gridY")
+	}
+
+	return nil
 }
 
-type Geometry struct {
-	Type        string    `json:"type"`
-	Coordinates []float64 `json:"coordinates"`
-	BBox        []float64 `json:"bbox"`
+type NWSApiPointsResponse struct {
+	Context    []interface{}    `json:"@context"`
+	ID         string           `json:"id"`
+	Type       string           `json:"type"`
+	Geometry   Geometry         `json:"geometry"`
+	Properties PointsProperties `json:"properties"`
 }
 
-type Properties struct {
+type PointsProperties struct {
 	Context             []interface{}    `json:"@context"`
 	Geometry            string           `json:"geometry"`
 	ID                  string           `json:"@id"`
@@ -49,20 +61,4 @@ type RelativeProperties struct {
 	State    string   `json:"state"`
 	Distance Distance `json:"distance"`
 	Bearing  Bearing  `json:"bearing"`
-}
-
-type Distance struct {
-	Value          float64 `json:"value"`
-	MaxValue       float64 `json:"maxValue"`
-	MinValue       float64 `json:"minValue"`
-	UnitCode       string  `json:"unitCode"`
-	QualityControl string  `json:"qualityControl"`
-}
-
-type Bearing struct {
-	Value          float64 `json:"value"`
-	MaxValue       float64 `json:"maxValue"`
-	MinValue       float64 `json:"minValue"`
-	UnitCode       string  `json:"unitCode"`
-	QualityControl string  `json:"qualityControl"`
 }

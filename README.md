@@ -2,7 +2,7 @@
 
 Weather aggregator service.
 
-Provides a REST API for weather data requests.
+A REST API for weather data requests.
 
 ## Usage
 
@@ -19,6 +19,14 @@ Then make a request for a point geometry in the United States. E.g. Central Park
 ```
   curl -X GET "http://localhost:8080/weather/point?longitude=-73.973192&latitude=40.772596"
 ```
+
+This returns a fair amount of (JSON) data, hourly weather forecast for a given location.
+
+The original Point geometry ends up representing a 2.5 by 2.5 kilometer square.
+
+If you are running locally you can find the output log file, e.g. `log/11-23-weather-log.json`.
+
+If running in a container you can inspect the container filesystem with `docker exec -it <container_id> sh` and copy to the host filesystem with `docker cp <container_id>:/log/11-23-weather-log.json log`.
 
 ## Implementation
 

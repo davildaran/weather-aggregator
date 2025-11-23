@@ -1,4 +1,5 @@
 build-bin:
+	rm weatheragg
 	go build -o weatheragg .
 
 build:

@@ -28,6 +28,10 @@ If you are running locally you can find the output log file, e.g. `log/11-23-wea
 
 If running in a container you can inspect the container filesystem with `docker exec -it <container_id> sh` and copy to the host filesystem with `docker cp <container_id>:/log/11-23-weather-log.json log`.
 
+## Dependencies
+
+1. [Golang](https://go.dev/dl/)
+
 ## Implementation
 
 Proxy calls to free [National Weather Service API](https://www.weather.gov/documentation/services-web-api) when applicable.

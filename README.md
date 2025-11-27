@@ -31,6 +31,9 @@ If running in a container you can inspect the container filesystem with `docker 
 ## Dependencies
 
 1. [Golang](https://go.dev/dl/)
+1. [Redis](https://redis.io/docs/latest/get-started/)
+1. [Go Redis Client Library](https://github.com/redis/go-redis)
+1. [National Weather Service API](https://www.weather.gov/documentation/services-web-api)
 
 ## Implementation
 

@@ -1,0 +1,41 @@
+services:
+  redis:
+    build: ./db
+    container_name: redis
+    profiles: [redis]
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_USER: "weatheradmin"
+      REDIS_PORT: "6379"
+    env_file:
+      - .env
+    healthcheck:
+      # test: ["CMD-SHELL", "pg_isready -U postgres -d reviews || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+      start_period: 2s
+    # volumes:
+      # - ./db/sql/init.sql:/docker-entrypoint-initdb.d/zz-init.sql
+
+  weather:
+    build: .
+    container_name: weather 
+    profiles: [api]
+    environment:
+      LOG_LEVEL: -4 # debug 
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    depends_on:
+      wait-for-db:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+

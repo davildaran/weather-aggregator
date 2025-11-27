@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	cache "weather-aggregator/redis"
 	weatherPoint "weather-aggregator/weather/handlers"
 )
 
@@ -33,6 +34,14 @@ func main() {
 	}
 	flog := slog.New(slog.NewJSONHandler(f, &logHandlerOpts))
 	defer f.Close()
+
+	// init redis server
+	redisPort := os.Getenv("REDIS_PORT")
+	if redisPort == "" {
+		redisPort = "6379"
+	}
+	rdb := cache.NewClient(ctx, redisPort)
+	defer cache.Close(rdb)
 
 	// define servers
 	weatherServerPort := "8080"

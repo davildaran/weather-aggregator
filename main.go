@@ -12,6 +12,7 @@ import (
 	"time"
 
 	cache "weather-aggregator/redis"
+	"weather-aggregator/weather/api"
 	weatherPoint "weather-aggregator/weather/handlers"
 )
 
@@ -43,11 +44,14 @@ func main() {
 	rdb := cache.NewClient(ctx, redisPort)
 	defer cache.Close(rdb)
 
+	nwsClient := &api.NWSClient{}
+	nwsClient.Init()
+
 	// define servers
 	weatherServerPort := "8080"
 	weatherServer := &http.Server{
 		Addr:    fmt.Sprintf(":%s", weatherServerPort),
-		Handler: weatherPoint.WeatherServerHandler(ctx, logger, flog),
+		Handler: weatherPoint.WeatherServerHandler(ctx, rdb, nwsClient, logger, flog),
 	}
 	// TODO metrics server, admin server, etc
 

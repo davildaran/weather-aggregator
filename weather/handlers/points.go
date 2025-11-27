@@ -7,8 +7,11 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
+
+	"github.com/redis/go-redis/v9"
+
+	cache "weather-aggregator/redis"
 	"weather-aggregator/weather/api"
 	"weather-aggregator/weather/schemas"
 )
@@ -16,7 +19,7 @@ import (
 // First, obtain the grid forecast(s) for a point location.
 // Then, obtain the specified grid forecase. Hourly or 12 hour periods. Raw grid data is also available.
 // https://www.weather.gov/documentation/services-web-api
-func WeatherServerHandler(ctx context.Context, logger *slog.Logger, flog *slog.Logger) http.Handler {
+func WeatherServerHandler(ctx context.Context, rdb *redis.Client, nwsClient *api.NWSClient, logger *slog.Logger, flog *slog.Logger) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/weather/point", func(w http.ResponseWriter, r *http.Request) {
 		// handle GET request for weather by lat, long
@@ -40,7 +43,6 @@ func WeatherServerHandler(ctx context.Context, logger *slog.Logger, flog *slog.L
 		// formulate request to National Weather Service API for /points/{latitude},{longitude}
 		// TODOs
 		// first look in cache, then db, then make external network request
-		// rate limiting
 		// timeout for fetching data
 		req, err := http.NewRequestWithContext(
 			ctx,
@@ -59,13 +61,22 @@ func WeatherServerHandler(ctx context.Context, logger *slog.Logger, flog *slog.L
 			return
 		}
 		req.Header.Set("Content-Type", "application/geo+json")
-		req.Header.Add("User-Agent", fmt.Sprintf("(%s, %s)", os.Getenv("WEBSITE_CONTACT"), os.Getenv("EMAIL_CONTACT")))
+		req.Header.Add("User-Agent", nwsClient.UserAgent)
 		// TODO add request to queue and implment producer consumer pattern
 		// TODO prometheus metric summary or histogram capturing latency
+
+		// set rate limiter
+		key := cache.NWSSetRateLimit(ctx, rdb, nwsClient, logger)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			logger.ErrorContext(ctx, "error sending GET request for weather points data to National Weather Service", "error", err)
 			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		err = cache.NWSIncrRateLimit(ctx, rdb, key, nwsClient, logger)
+		if err != nil {
+			logger.ErrorContext(ctx, "error calling National Weather Service api", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		defer resp.Body.Close()
@@ -118,7 +129,7 @@ func WeatherServerHandler(ctx context.Context, logger *slog.Logger, flog *slog.L
 			return
 		}
 		req.Header.Set("Content-Type", "application/geo+json")
-		req.Header.Add("User-Agent", fmt.Sprintf("(%s, %s)", os.Getenv("WEBSITE_CONTACT"), os.Getenv("EMAIL_CONTACT")))
+		req.Header.Add("User-Agent", nwsClient.UserAgent)
 		// TODO add request to queue and implment producer consumer pattern
 		// TODO prometheus metric summary or histogram capturing latency
 		resp, err = http.DefaultClient.Do(req)
